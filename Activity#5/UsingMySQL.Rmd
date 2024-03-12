@@ -1,0 +1,127 @@
+---
+title: "Importing/Exporting of Data"
+author: "Joyce F. Jamile"
+subtitle: Use of MySQL
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Creating connections
+
++ You must have a database first before connecting the RStudio into a database. Depending on the database, a package should be installed like **RMySQL**, **RPostGre**, **MariaDB** to name a few.
+
+> `dbConnect()` is being used to connect the R into MySQL
+
+```
+library(dplyr,dbplyr)
+library(RMariaDB) 
+
+#creating connections
+connection <- dbConnect(RMariaDB::MariaDB(), 
+                        dsn="MySQL-connection",
+                        Server = "localhost",
+                        dbname = "Basultin_CS102", 
+                        user = "root", 
+                        password = PWD) #PWD is the password of your MySQL
+```
+
+
+### Listing the tables
+
++ Once connected, `dbListTables` to show or list the tables.
+
+
+
+```{r}
+#listing the tables of the sample_db 
+dbListTables(connection)
+```
+
+
+```{r}
+#listing the fields of the authors in the table sample_db
+dbListFields(connection,"authors")
+```
+
+
+```{r}
+dbListFields(connection,"posts")
+```
+
+
+### Getting data from MySQL
+
++ using the *`dbGetQuery`* is beinng used to get the data
+
++ SQL commands were `SELECT` and `FROM`
+
+
+```{r}
+posts_dta <- dbGetQuery(connection, "SELECT * FROM sample_db.posts")
+# checking for the columns and its content
+glimpse(posts_dta)
+```
+
+```{r}
+#getting all data using SELECT * FROM dbaseName
+empi_data <- dbGetQuery(connection, "SELECT * FROM sample_db.authors")
+# checking for the columns and its content
+glimpse(empi_data)
+```
+
+
+```{r}
+#getting all data using SELECT * FROM dbaseName
+empi_data[c(1:10),]
+```
+
+```{r}
+empi_data <- dbGetQuery(connection, "SELECT * FROM sample_db.authors")
+tail(empi_data)
+```
+
+```{r}
+#alternative way to display selected fields
+#displays the selected fields of the table
+posts_data <- dbGetQuery(connection, "SELECT title,description FROM sample_db.posts")
+posts_data[c(1:2),]
+```
+
+```{r}
+#getting all data using SELECT * FROM dbaseName
+SqlQuery <- "
+  SELECT title,description 
+  FROM sample_db.posts
+  "
+
+as_tibble(dbGetQuery(connection,SqlQuery))
+```
+
+### Inserting values into a Table
+
+```{r}
+# insert values into MySQL
+query <- "INSERT INTO authors (id, first_name, last_name, email, birthdate, added) VALUES (102, 'Juan', 'dela Cruz', 'mine@example.com', '2005-12-02','2024-02-19 05:00:10')"
+
+# Execute the query
+query_result <- dbSendQuery(connection, query)
+
+# clear the result after executing the query
+dbClearResult(query_result)
+```
+
+
+```{r}
+#checking if the value was inserted into a table
+tail(empi_data)
+```
+```{r}
+#disconnect from dbase
+dbDisconnect(connection)
+```
