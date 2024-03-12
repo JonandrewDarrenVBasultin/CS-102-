@@ -19,56 +19,84 @@ subject <- NULL
 abstract <- NULL
 meta <- NULL
 
-pages <- seq(from = 0, to = 0, by = 2)
+# Initialize the total number of papers
+total_papers <- 0
 
-for( i in pages){
-  
+# Set the maximum number of papers you want (150 in this case)
+max_papers <- 150
+
+# Initialize the page variable
+i <- 0
+
+# Initialize a vector to store unique identifiers (paper URLs)
+unique_identifiers <- c()
+
+while (total_papers < max_papers) {
+  i <- i + 2  # Increment by 2 to go to the next page
   tmp_url <- modify_url(url, query = list(start = i))
-  tmp_list <- read_html(tmp_url) %>%
-    html_nodes('p.list-title.is-inline-block') %>%
-    html_nodes('a[href^="https://arxiv.org/abs"]') %>%
+  tmp_list <- read_html(tmp_url) %>% 
+    html_nodes('p.list-title.is-inline-block') %>% 
+    html_nodes('a[href^="https://arxiv.org/abs"]') %>% 
     html_attr('href')
   
-  for(j in 1:min(length(tmp_list), 10)){
-    
+  if (length(tmp_list) == 0) {
+    # Break the loop if there are no more papers to scrape
+    break
+  }
+  
+  for (j in 1:length(tmp_list)) {
     tmp_paragraph <- read_html(tmp_list[j])
     
-    # title
-    tmp_title <- tmp_paragraph %>% html_nodes('h1.title.mathjax') %>% html_text(T)
-    tmp_title <-  gsub('Title:', '', tmp_title)
-    title <- c(title, tmp_title)
+    # Extract the unique identifier (e.g., paper URL)
+    unique_id <- tmp_list[j]
     
-    # author
-    tmp_author <- tmp_paragraph %>% html_nodes('div.authors') %>% html_text
-    tmp_author <- gsub('\\s+',' ',tmp_author)
-    tmp_author <- gsub('Authors:','',tmp_author) %>% str_trim
-    author <- c(author, tmp_author)  
-    
-    # subject
-    tmp_subject <- tmp_paragraph %>% html_nodes('span.primary-subject') %>% html_text(T)
-    subject <- c(subject, tmp_subject)
-    
-    # abstract
-    tmp_abstract <- tmp_paragraph %>% html_nodes('blockquote.abstract.mathjax') %>% html_text(T)
-    tmp_abstract <- gsub('\\s+',' ',tmp_abstract)
-    tmp_abstract <- sub('Abstract:','',tmp_abstract) %>% str_trim
-    abstract <- c(abstract, tmp_abstract)
-    
-    # meta
-    tmp_meta <- tmp_paragraph %>% html_nodes('div.submission-history') %>% html_text
-    tmp_meta <- lapply(strsplit(gsub('\\s+', ' ',tmp_meta), '[v1]', fixed = T),'[',2) %>% unlist %>% str_trim
-    meta <- c(meta, tmp_meta)
-    cat(j, "paper\n")
-    Sys.sleep(1)
-    
+    # Check if the paper has already been scraped
+    if (!(unique_id %in% unique_identifiers)) {
+      # Your existing scraping code...
+      
+      # title
+      tmp_title <- tmp_paragraph %>% html_nodes('h1.title.mathjax') %>% html_text(T)
+      tmp_title <- gsub('Title:', '', tmp_title)
+      title <- c(title, tmp_title)
+      
+      # author
+      tmp_author <- tmp_paragraph %>% html_nodes('div.authors') %>% html_text
+      tmp_author <- gsub('\\s+',' ',tmp_author)
+      tmp_author <- gsub('Authors:','',tmp_author) %>% str_trim
+      author <- c(author, tmp_author)  
+      
+      # subject
+      tmp_subject <- tmp_paragraph %>% html_nodes('span.primary-subject') %>% html_text(T)
+      subject <- c(subject, tmp_subject)
+      
+      # abstract
+      tmp_abstract <- tmp_paragraph %>% html_nodes('blockquote.abstract.mathjax') %>% html_text(T)
+      tmp_abstract <- gsub('\\s+',' ',tmp_abstract)
+      tmp_abstract <- sub('Abstract:','',tmp_abstract) %>% str_trim
+      abstract <- c(abstract, tmp_abstract)
+      
+      # meta
+      tmp_meta <- tmp_paragraph %>% html_nodes('div.submission-history') %>% html_text
+      tmp_meta <- lapply(strsplit(gsub('\\s+', ' ',tmp_meta), '[v1]', fixed = T),'[',2) %>% unlist %>% str_trim
+      meta <- c(meta, tmp_meta)
+      cat(j, "paper\n")
+      Sys.sleep(1)
+      
+      # Add the unique identifier to the vector
+      unique_identifiers <- c(unique_identifiers, unique_id)
+      
+      total_papers <- total_papers + 1
+      cat(total_papers, "papers scraped\n")
+    }
   }
-  cat((i/50) + 1,'/ 9 page\n')
-  
 }
+
+# Combine all papers from different pages into one data frame
 papers <- data.frame(title, author, subject, abstract, meta)
+
+# Save the result
+save(papers, file = "Arxiv_gaming_All.RData")
+write.csv(papers, file = "Arxiv_papers_on_gaming_All.csv")
+
 end <- proc.time()
 end - start # Total Elapsed Time
-
-# Export the result
-save(papers, file = "Arxiv_gaming.RData")
-write.csv(papers, file = "Arxiv papers on gaming.csv")
