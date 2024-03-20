@@ -1,0 +1,232 @@
+---
+title: "Importing/Exporting of Data"
+author: "Joyce F. Jamile"
+subtitle: Use of MySQL
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Creating connections
+
++ You must have a database first before connecting the RStudio into a database. Depending on the database, a package should be installed like **RMySQL**, **RPostGre**, **MariaDB** to name a few.
+
+> `dbConnect()` is being used to connect the R into MySQL
+
+```{r}
+library(dplyr,dbplyr)
+library(RMariaDB) 
+
+#creating connections
+connection <- dbConnect(RMariaDB::MariaDB(), 
+                        dsn="MySQL-connection",
+                        Server = "localhost",
+                        dbname = "Basultin_CS102", 
+                        user = "root", 
+                        password = "") #PWD is the password of your MySQL
+                        
+```
+
+
+### Listing the tables
+
++ Once connected, `dbListTables` to show or list the tables.
+
+
+
+```{r}
+#listing the tables of the sample_db 
+dbListTables(connection)
+```
+
+
+```{r}
+#listing the fields of the authors in the table sample_db
+dbListFields(connection,"activity5")
+```
+
+### Getting data from MySQL
+
++ using the *`dbGetQuery`* is being used to get the data
+
++ SQL commands were `SELECT` and `FROM`
+
+
+```{r}
+act5_dta <- dbGetQuery(connection, "SELECT * FROM Basultin_CS102.activity5")
+# checking for the columns and its content
+glimpse(act5_dta)
+```
+
+```{r}
+#getting all data using SELECT * FROM dbaseName
+empi_data <- dbGetQuery(connection, "SELECT * FROM sample_db.authors")
+# checking for the columns and its content
+glimpse(empi_data)
+```
+
+
+```{r}
+#getting all data using SELECT * FROM dbaseName
+empi_data[c(1:10),]
+```
+
+```{r}
+empi_data <- dbGetQuery(connection, "SELECT * FROM sample_db.authors")
+tail(empi_data)
+```
+
+```{r}
+#alternative way to display selected fields
+#displays the selected fields of the table
+posts_data <- dbGetQuery(connection, "SELECT title,description FROM sample_db.posts")
+posts_data[c(1:2),]
+```
+
+```{r}
+#getting all data using SELECT * FROM dbaseName
+SqlQuery <- "
+  SELECT title,description 
+  FROM sample_db.posts
+  "
+
+as_tibble(dbGetQuery(connection,SqlQuery))
+```
+
+### Inserting values into a Table
+
+```{r 1}
+# insert values into MySQL
+query <- "INSERT INTO activity5 (Usernames, Reviewer_Date, Reviewer_Content, Rating) VALUES ('13Funbags', '29 August 2018', 'I will only say that this movie is twice as long as it should be and has way too many characters. I won't even try to guess why they did that. I love Marvel and have a huge tolerance for bad movies, but by 29 minutes in I was ready to give up. If all the bad stuff had been cut out this would have been a great 90 minute movie.
+', '10/10')"
+
+# Execute the query
+query_result <- dbSendQuery(connection, query)
+
+# clear the result after executing the query
+dbClearResult(query_result)
+```
+
+```{r 2}
+# insert values into MySQL
+query <- "INSERT INTO activity5 (Usernames, Reviewer_Date, Reviewer_Content, Rating) VALUES ('3DForMe', '5 March 2023', 'Aside from Paul Rudd having a romantic relationship with someone who looks exactly like him in this movie, this has been such a bad installment to, not only the Antman franchise, but to the MCU, PERIOD.Then again, most movies from the MCU in the past few years have not been up to par with their predecessors.Into the Quantum Realm... we get Disney crossing their franchises and making another terrible Star Wars movie. There really wasn't much fun in this movie as the previous ones. I love Antman and was so excited when they first introduced him, and they totally dumped on it.Modok...REALLY!?! How did they put that out like that? Terminator 2 was released before CGI took over the movie industry and had WAY better looking CGI than this.Kang. He was cool, but there has been so much buzz around his the actor stole the show with his portrayal, but I think anyone in that role would've made the movie exactly the same.Michael PeÃ±a...is NOT in the movie which has been such a great addition to each of the other Antman movies and an absolute fan favorite...but it seems the fans aren't who they're trying to please, here.Cassie...whatever. Really nothing particularly special about her character or the actress, herself.Seriously...SERIOUSLY just so disappointed in what Marvel has been doing lately. Just ruining everything.
+
+', '    6/10')"
+
+# Execute the query
+query_result <- dbSendQuery(connection, query)
+
+# clear the result after executing the query
+dbClearResult(query_result)
+```
+
+```{r 3}
+# insert values into MySQL
+query <- "INSERT INTO activity5 (Usernames, Reviewer_Date, Reviewer_Content, Rating) VALUES ('3xHCCH', '9 January 2013', 'I have just finished reading the book the other day, and today I got to watch the film version. With the book still so fresh in my head, I went into the cinema with very high expectations. This is specially so after reading and hearing reviews which call Ang Lee's cinematic masterpiece visually comparable to "Avatar" or emotionally comparable to "The Little Prince," as well as all of the awards buzz.The book for me was a pleasant though slow read because of the lengthy wordy, even flowery, descriptions Yann Martel uses for his languid reflection on zoo life, his comparative study of Hindu, Christian and Moslem philosophy, and of course, his survival tale at sea by a teenager and a Bengal tiger sharing one lifeboat. It waxes philosophical in the beginning, then waxes fantastical in the middle, before settling for dry reality at the end. While a movie could probably improve on the imagery for each scene, there are several key parts of the novel that would entail a lot of narration. On the big screen, too much narration cannot be too good.My first assumption turned out to be true. The cinematography and visual effects were expectedly first rate and excellent. Those camera angles were breathtaking. The colors were very vibrant. The special effects regarding animals were realistic for the most part, especially the land mammals, particularly Richard Parker. Though I have to say that the water creatures were too obviously computer-generated, not too good. A most triumphant sequence in the film for me were the scenes on the floating green island of algae and meerkats. I thought that was ideally visualized and executed, so much better than that chapter of the book.My second assumptions also turned out true. A lot of the story needed to be narrated by an adult Pi Patel as he was being interviewed by a novelist researching for his next book. These bookending present day scenes were pretty dry for me. The whole last chapter of the book when Pi was interviewed by the Japanese shipping officials was all one long narration only without supporting imagery. All of this talky narration may be boring for some people. In order to make the film appeal to more people, Ang Lee spares us from gory details which the book was not averse to describing in graphic detail. In the film, the screen time of the zebra, orangutan and hyena was very short. For all the brutality that was supposed to have happened on board, Ang's lifeboat remains almost pristine white. I thought that was quite merciful of Ang. I wish I could also say the same for some sappy melodramatic scenes, like Richard Parker laying his head on Pi's lap, which were not in the book.Overall, this film version of "Life of Pi" is very good, but it can be disappointing for people who have read the book. It was a loyal albeit sanitized version of the book, which is not really a bad thing. The book was not exactly inspirational to me, more educational actually. For this film, Ang Lee seemingly aspired to make this movie inspirational, and these obvious efforts may prove to backfire for some audiences.
+', '10/10')"
+
+# Execute the query
+query_result <- dbSendQuery(connection, query)
+
+# clear the result after executing the query
+dbClearResult(query_result)
+```
+
+```{r 4}
+# insert values into MySQL
+query <- "INSERT INTO activity5 (Usernames, Reviewer_Date, Reviewer_Content, Rating) VALUES ('661jda', '1 July 2023', 'Thank you for bringing Indy back-after the last one, I thought you buried him. As long as Harrison Ford is around, you can always bring up an Indiana Jones saga. I'll never say anything bad about Ford's performance as Jones. Honestly believe he should have at least been nominated for RAIDERS. He never fails to please and does so again here. But the story is uneven. Sometimes speeding manically along and then when it slows down--it stops. Bringing in Waller Bridge was a good idea to keep the story lively although I'm not convinced so much of her conversion from thief at the end. Maybe the next will push her back to the dark side and the emergence of a new indy junior would be a good thing. Mads is a good villian-you will really want to hate him at one point. Unfortunately, Teddy is no Short-Round. He lacks the likeability and thats a hole in this story: he's not charismatic nor is he really likeable so you almost don't care what happens to him other than he is integral to saving Indy and Wombat towards the end. Indiana Jones is a character that really shouldn't die: he is the 1930s version of Luke Skywalker: to make him go away will almost be unAmerican, but we need to get to another hero and the next jones should be the bridge that this one wasn't. Still - I would rather pay money to see this flawed jones than pay money to see half the films that are also coming out this year.
+', '10/10')"
+
+# Execute the query
+query_result <- dbSendQuery(connection, query)
+
+# clear the result after executing the query
+dbClearResult(query_result)
+```
+
+```{r 5}
+# insert values into MySQL
+query <- "INSERT INTO activity5 (Usernames, Reviewer_Date, Reviewer_Content, Rating) VALUES ('aji4u4ever', '25 April 2019', 'AND THE WAIT IS OVERInfinity War which gave the world rumbling because of the wrath of Thanos. And here it elevates the emotions of every MCU fans that too right from the stone.I always wanted to brag/say about Endgame but that will end up with too many spoilers. So the plot remains unrevealed.The movie has an ensemble cast feat. all the ones you've known and with the outnumbered super heroes teams up to defeat Thanos, one of the most powerful villain of MCU. He stands out tall in this one too. All superheroes has their own spaces, imprinting themselves in everyone's mind. Endgame portrays the emotions and personal stories of the superheroes and was really touching.Even though Endgame is Visual Masterpiece but rides through the emotions whole throughout but also will make you laugh. Thor, Antman, Hulk and Rocket leads the laughter squad. Captain America was not my fav. hero, but after this he has a special spot in my heart. Iron Man, he was brilliant. All the superheroes will grab a special place in your heart for sure.Russo brothers did a wonderful job in terms of writing and in directing. Endgame is visual treat to the eyes and the finale battle was also well convincing. Technical aspects were outstanding in terms of Camera, Score, CGI, Editing, Art, etc.It's a long 181 minutes movie but you will not take your eyes even for one second.A must watch in Theaters especially in IMAX. a MASTERPIECEI will go out with 10 on 10
+', '10/10')"
+
+# Execute the query
+query_result <- dbSendQuery(connection, query)
+
+# clear the result after executing the query
+dbClearResult(query_result)
+```
+
+```{r 6}
+# insert values into MySQL
+query <- "INSERT INTO activity5 (Usernames, Reviewer_Date, Reviewer_Content, Rating) VALUES ('AlsExGal', '26-Aug-18', 'Epic superhero team-up from Marvel Studios and directors Anthony & Joe Russo. When an alien named Thanos (motion capture and voice performance from Josh Brolin) begins to collect all six of the Infinity Stones, incredibly powerful artifacts that grant their possessor unimaginable abilities, it's up to the galaxy's greatest heroes to try and stop him. Original Avengers Iron Man (Robert Downey Jr.), Thor (Chris Hemsworth), Hulk (Mark Ruffalo), Black Widow (Scarlett Johansson) and Captain America (Chris Evans) join forces with newcomers Dr. Strange (Benedict Cumberbatch), Spider-Man (Tom Holland), Black Panther (Chadwick Boseman) and even the Guardians of the Galaxy, among others, but will their combined might be enough to stop Thanos' apocalyptic plan? The culmination of plotlines 10 years in the making, this is one of the biggest gambles in movie history, and it seems to have paid off. The directors and screenwriters somehow manage to juggle this many characters and keep the balance just about right, with memorable moments doled out to all of them. The plot itself is very basic (Stop Thanos) and much time is spent on well-executed action scenes and eye-candy science fiction set-pieces. The dialogue is very humorous, and the various character combinations are amusing. There are usually three or four story directions going on at once, with the action switching from location to location frequently, but never in such a way as to become a distraction or disorienting. The biggest question mark of the film was how well Thanos would turn out, a villain that's been teased for the last 6 years in these movies. I was dubious about Brolin's casting, as while I like him in many things, he never struck me as intergalactic demi-god alien appropriate. I'm happy to say that he works out fine, and while the effects work done on him is very good, his voice sells the character, arguably one of the best developed out of any of the Marvel movies thus far.I won't go into spoiler territory, but I will mention that the ending may befuddle or even anger some viewers. As a former comic book reader, I wasn't upset by it, and even expected it (even before the internet spoiled things for me). But those going in blind should be prepared for an unconventional finale.
+', '9/10')"
+
+# Execute the query
+query_result <- dbSendQuery(connection, query)
+
+# clear the result after executing the query
+dbClearResult(query_result)
+```
+
+```{r 7}
+# insert values into MySQL
+query <- "INSERT INTO activity5 (Usernames, Reviewer_Date, Reviewer_Content, Rating) VALUES ('bighead_n_lilarms.', '22-Jan-19', 'Every single ounce of me absolutely loved this movie. I grew up watching all iterations of DB, and the fact that my two children were about to jump out the seat the same time as their 33 year old pop was, speaks volumes. Just wish it had another 20-40 min of story added on, whether it was to Brolys story, or even the aftermath of the fight. Also a larger release stateside would do wonders I feel like. I feel like a kid again and it feels damn good.
+', ' 7/10')"
+
+# Execute the query
+query_result <- dbSendQuery(connection, query)
+
+# clear the result after executing the query
+dbClearResult(query_result)
+```
+
+```{r 8}
+# insert values into MySQL
+query <- "INSERT INTO activity5 (Usernames, Reviewer_Date, Reviewer_Content, Rating) VALUES ('BigJimNoFool', '14-Sep-20', 'I was amazed and enthralled by the visuals which, even now 8 years later, are still breathtakingly realistic. The problem lies i think in the script and performances which remained emotionally aloof.
+', '8/10')"
+
+# Execute the query
+query_result <- dbSendQuery(connection, query)
+
+# clear the result after executing the query
+dbClearResult(query_result)
+```
+
+```{r 9}
+# insert values into MySQL
+query <- "INSERT INTO activity5 (Usernames, Reviewer_Date, Reviewer_Content, Rating) VALUES ('bigpeas', '09-Oct-19', 'Let me start by saying THIS is how you wrap a saga!!!!
+
+', '10/10')"
+
+# Execute the query
+query_result <- dbSendQuery(connection, query)
+
+# clear the result after executing the query
+dbClearResult(query_result)
+```
+
+```{r 10}
+# insert values into MySQL
+query <- "INSERT INTO activity5 (Usernames, Reviewer_Date, Reviewer_Content, Rating) VALUES ('bizzyziggy', '01-Jul-23', 'In 1981 I went to a sneak preview of Raiders of the Lost Ark. I saw it several more times at the theater, even staying and watching it again in the same day. I encouraged family and friends to see it. I bought the soundtrack on LP, later CD. I bought the movie on VHS, DVD and currently 4k.This is not my Indiana Jones.The story writing is bad. The direction is awful. Mangold is an overrated director who will never deserve the status of the great directors of yesteryear. And shame on Mangold for repeated lying to the fans about re-shoots and other things that came out of his mouth.Who would think that anything would make me want to increase my rating and rewatch Indiana Jones and the Kingdom of the Crystal Skull. This movie does, just as Disney's Star Wars stab elevated the prequel trilogy for everyone.How they dismissed the character of the son Mutt Williams in this movie was yet more poor writing and undeserved.Who would think that Helena would make me appreciate. Willie Scott, a character I despised. Helena does many nonredeemable actions, but is never called on it.Ridiculous thin mustached Teddy is no Short Round. I also have a problem with the teenage character directly involved with the death of a villain, even if he was a Nazi. It just didn't seem right.The whole section in the past, Syracuse, Sicily, just seemed out of place and Dr. Who goofiness.The villain and his number one henchmen don't get the personal Indiana Jones touch that others received in the past. It was like, boom, crash. That's it.It also quite obvious where the original movie ending was heading. I can see it now. Indy in the past and some future artifact found showing what happened to him. Yawn. I would be interested in what some of the unfortunate who saw the original ending have to say. Instead, we get an abrupt ending in the past and the new re-shot story-tale ending unfold.Yes, we get Marion. Which fans always wanted, and it appears she was not in it originally, and also dismissed as another poor writing plot point. I was very happy to see her. And the filmmakers get credit for this last five minute, because it is a feel good moment that viewers are going to resonate with instead of the last 2+ hours.For your sake, pass this by. Oh, and I wasn't paid for this negative review. I actually lost money for the ticket, popcorn and drink.
+', '1/10')"
+
+# Execute the query
+query_result <- dbSendQuery(connection, query)
+
+# clear the result after executing the query
+dbClearResult(query_result)
+```
+
+```{r}
+#checking if the value was inserted into a table
+tail(empi_data)
+```
+```{r}
+#disconnect from dbase
+dbDisconnect(connection)
+```
